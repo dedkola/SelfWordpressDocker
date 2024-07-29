@@ -1,0 +1,57 @@
+version: "2.21"
+services:
+    nginx-demo:
+        container_name: nginx
+        image: nginx
+        restart: always
+
+        volumes:
+            - nginx_volume:/usr/share/nginx/html
+        environment:
+            APP_ENV: dev
+
+        depends_on:
+            - db
+
+    db:
+        image: mysql:latest
+        container_name: mysql
+
+        environment:
+            MYSQL_DATABASE: wordpress
+            MYSQL_PASSWORD: wordpress
+            MYSQL_ROOT_PASSWORD: wordpress
+            WORDPRESS_CONFIG_EXTRA: |
+                define('WP_HOME','http://localhost');
+                define('WP_SITEURL','http://localhost');            
+        ports:
+            - 3306:3306
+        volumes:
+            - ./sql:/docker-entrypoint-initdb.d
+            - db_data:/var/lib/mysql
+
+    phpmyadmin:
+        image: phpmyadmin
+        ports:
+            - 81:80
+        environment:
+            - PMA_ARBITRARY=1
+    wordpress:
+
+        image: wordpress:latest
+        ports:
+            - 8000:80
+        volumes:
+            - ./html:/var/www/html
+
+    memcached:
+        container_name: memcached
+        image: bitnami/memcached:latest
+        ports:
+            - "11211:11211"
+
+volumes:
+    db_data:
+        name: "mysql-volume"
+    nginx_volume:
+        name: "nginx-volume"
